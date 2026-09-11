@@ -39,7 +39,19 @@ namespace BancoSENAIAPI.Controllers
         {
 
             await arquivo.CopyToAsync(stream);
+            {
 
+                Id = nextId++,
+                Name = nomeOriginal,
+                Extensao = extensao,
+                Caminho = caminhoFinal,
+                CodigoCliente = codigoCliente
+
+            };
+
+            _documentsMetadados.Add(documentosMetadados);
+
+            return Ok(new { mensagem = "Documento anexado com sucesso", arquivoSalvo = novoNome });
 
         }
     }
