@@ -30,6 +30,29 @@ namespace BancoSENAIAPI.Controllers
         {
             Directory.CreateDirectory(pastaCliente);
         }
-    }
+        string extensao = Path.GetExtension(arquivo.FileName);
 
+        string nomeOriginal = Path.GetFileNameWithoutExtension(arquivo.FileName);
+
+        string novoNome = $"{codigoCliente}_{nomeOriginal}_{Guid.NewGuid()}{extensao}";
+
+        string caminhoFinal = Path.Combine(pastaCliente, novoNome);
+
+        using (var stream = new FileStream(caminhoFinal, FileMode.Create))
+        {
+            await arquivo.CopyToAsync(stream);
+        }
+        var documentoMetadados = new Models.DocumentoMetadado
+        {
+            ID = _next++,
+            Name = nomeOriginal,
+            Extensão = extensao,
+            Caminho = caminhoFinal,
+            CodigoCliente = codigoCliente
+        };
+        _documentosMetadados.Add(documentoMetadados);
+
+        return Ok(new { mensagem = "Documento anexado com sucesso", arquivoSalvo = novoNome });
+    }
+}
 }
