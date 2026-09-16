@@ -37,6 +37,10 @@ namespace BancoSENAIAPI.Controllers
             }
             string extensao = Path.GetExtension(arquivo.FileName);
 
+            string[] extensoesPermitidas = { ".pdf", ".jpg", ".png" };
+            if (!extensoesPermitidas.Contains(extensao.ToLower())) { return BadRequest("Extensão de arquivo não permitida. Apenas .pdf, .jpg e .png são aceitos."); 
+
+            }
             string nomeOriginal = Path.GetFileNameWithoutExtension(arquivo.FileName);
 
             string novoNome = $"{codigoCliente}_{nomeOriginal}_{Guid.NewGuid()}{extensao}";
