@@ -27,3 +27,41 @@ async function enviarDocumento() {
         alert("Falha ao enviar o documento");
     }
 }
+
+async function listarDocumentos() {
+
+    const codigoCliente = document.getElementById("codigoCliente").value;
+
+    if (!codigoCliente) {
+        alert("Informe o código do cliente");
+        return;
+    }
+
+    const response = await fetch(`${URL_API}/listar/${codigoCliente}`);
+
+    if (response.ok) {
+
+        const documentos = await response.json();
+        const corpoTabela = document.getElementById("corpoTabela");
+        corpoTabela.innerHTML = "";
+
+        documentos.forEach(documento => {
+
+            const linha = document.createElement("tr");
+
+            linha.innerHTML = `
+                <td>${documento.id}</td>
+                <td>${documento.name}</td>
+                <td>${documento.Extensao}</td>
+                <td>Ações</td>
+            `;
+
+            corpoTabela.appendChild(linha);
+        });
+
+    } else {
+
+        alert("Nenhum documento foi encontrado para este cliente");
+
+    }
+}
