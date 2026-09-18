@@ -1,4 +1,4 @@
-﻿namespace BancoSENAIAPI.Models
+namespace BancoSENAIAPI.Models
 {
     public class DocumentoMetadado
     {

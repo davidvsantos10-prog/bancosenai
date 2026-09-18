@@ -10,7 +10,6 @@ namespace BancoSENAIAPI.Controllers
         private readonly string _caminhoRaiz = Path.Combine
             (Directory.GetCurrentDirectory(),
             "ClienteArquivos");
-
     };
     private static List<Models.DocumentoMetadado> _documentosMetadados = new List<Models.DocumentoMetadado> { };
 
