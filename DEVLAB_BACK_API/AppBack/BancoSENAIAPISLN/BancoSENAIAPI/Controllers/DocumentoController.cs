@@ -23,6 +23,10 @@ namespace BancoSENAIAPI.Controllers
             {
                 return BadRequest("Nenhum arquivo foi criado.");
             }
+            if (arquivo.Length > 2 * 1024 * 1024)
+            {
+                return BadRequest("O arquivo não pode ter mais de 2 MB.");
+            }
 
             string pastaCliente = Path.Combine(_caminhoRaiz, codigoCliente.ToString());
 
@@ -31,6 +35,12 @@ namespace BancoSENAIAPI.Controllers
                 Directory.CreateDirectory(pastaCliente);
             }
             string extensao = Path.GetExtension(arquivo.FileName);
+
+            string[] extensoesPermitidas = { ".pdf", ".jpg", ".png" };
+            if (!extensoesPermitidas.Contains(extensao.ToLower()))
+            {
+                return BadRequest("Extensão de arquivo não permitida. Apenas .pdf, .jpg e .png são aceitos.");
+            }
 
             string nomeOriginal = Path.GetFileNameWithoutExtension(arquivo.FileName);
 
@@ -67,6 +77,40 @@ namespace BancoSENAIAPI.Controllers
             }
 
             return Ok(documentos);
+        }
+
+        [HttpGet("download/{id}")]
+        public IActionResult DownloadDocumento(int id)
+        {
+            var documento = _documentosMetadados
+                .FirstOrDefault(d => d.Id == id);
+            if (documento == null)
+            {
+                return NotFound("Documento não encontrado.");
+            }
+            byte[] arquivoBytes =
+                System.IO.File.ReadAllBytes(documento.Caminho);
+            string nomeArquivo =
+                documento.Nome + documento.Extensao;
+            return File(
+                arquivoBytes,
+                "application/octet-stream",
+                nomeArquivo
+            );
+        }
+
+        [HttpDelete("excluir/{id}")]
+        public IActionResult ExcluirDocumento(int id)
+        {
+            var documento = _documentosMetadados
+                .FirstOrDefault(d => d.Id == id);
+            if (documento == null)
+            {
+                return NotFound("Documento não encontrado.");
+            }
+            System.IO.File.Delete(documento.Caminho);
+            _documentosMetadados.Remove(documento);
+            return Ok("Documento excluído com sucesso.");
         }
 
 
