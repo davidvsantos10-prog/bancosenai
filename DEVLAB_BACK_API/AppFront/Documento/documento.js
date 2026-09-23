@@ -51,9 +51,16 @@ async function listarDocumentos() {
 
             linha.innerHTML = `
                 <td>${documento.id}</td>
-                <td>${documento.name}</td>
-                <td>${documento.Extensao}</td>
-                <td>Ações</td>
+                <td>${documento.nome}</td>
+                <td>${documento.extensao}</td>
+                <td>
+<button onclick="baixarDocumento(${documento.id})">
+Download
+</button>
+<button onclick="excluirDocumento(${documento.id})">
+Excluir
+</button>
+</td>
             `;
 
             corpoTabela.appendChild(linha);
@@ -88,5 +95,25 @@ async function baixarDocumento(id) {
 
         alert("Não foi possível baixar o documento");
 
+    }
+}
+async function excluirDocumento(id) {
+
+    const confirmar = confirm("Tem certeza que deseja excluir este documento?");
+
+    if (!confirmar) {
+        return;
+    }
+
+    const response = await fetch(`${URL_API}/excluir/${id}`, {
+        method: "DELETE"
+    });
+
+    if (response.ok) {
+        alert("Documento excluído com sucesso");
+
+        listarDocumentos();
+    } else {
+        alert("Não foi possível excluir o documento");
     }
 }

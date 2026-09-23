@@ -19,3 +19,31 @@ input {
     margin-right: 10px;
     border: 1px solid #ccc;
 }
+
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    button[onclick^="baixarDocumento"] {
+        background-color: #ffc107;
+    }
+
+    button[onclick^="excluirDocumento"] {
+        background-color: #dc3545;
+        color: white;
+    }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
