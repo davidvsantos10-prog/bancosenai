@@ -65,3 +65,28 @@ async function listarDocumentos() {
 
     }
 }
+async function baixarDocumento(id) {
+
+    const response = await fetch(`${URL_API}/download/${id}`);
+
+    if (response.ok) {
+
+        const arquivo = await response.blob();
+
+        const url = window.URL.createObjectURL(arquivo);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = `documento-${id}`;
+
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+
+    } else {
+
+        alert("Não foi possível baixar o documento");
+
+    }
+}
