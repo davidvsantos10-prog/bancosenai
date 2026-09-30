@@ -2,15 +2,14 @@
 {
     public class Cliente
     {
-        public int CodigoCliente { get; set; }
-        public required string NomeCliente { get; set; }
-        public required string CPF { get; set; }
-        public int NumeroAgencia { get; set; } = 10;
-        public int SaldoTotal { get; set; } = 0;
-        public string Sexo { get; set; }
-        public string Endereco { get; set; }
-        public string Cidade { get; set; }
-        public string Estado { get; set; }
+        public int Codigo { get; set; }
 
+        public string Nome { get; set; }
+
+        public string Cpf { get; set; }
+
+        public int NumeroAgencia { get; set; }
+
+        public decimal Saldo { get; set; } = 0.0m;
     }
 }
