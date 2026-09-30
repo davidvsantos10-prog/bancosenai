@@ -1,15 +1,21 @@
-﻿namespace BancoSENAIAPI.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+usingusing System.ComponentModel.DataAnnotations;
+
+namespace BancoSENAIAPI.Models
 {
     public class Cliente
     {
-        public int Codigo { get; set; }
+        [Key]
+        public int CodigoCliente { get; set; }
+        [Required]
+        public required string NomeCliente { get; set; }
+        [Required]
+        public required string CPF { get; set; }
+        [Required]
+        public int NumeroAgencia { get; set; } = 10;
+        [Required]
+        public int SaldoTotal { get; set; } = 0;
 
-        public string Nome { get; set; }
-
-        public string Cpf { get; set; }
-
-        public int NumeroAgencia { get; set; }
-
-        public decimal Saldo { get; set; } = 0.0m;
     }
 }
