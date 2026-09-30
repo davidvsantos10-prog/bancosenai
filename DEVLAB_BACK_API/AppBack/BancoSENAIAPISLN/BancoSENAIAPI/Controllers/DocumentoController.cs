@@ -1,42 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using BancoSENAIAPI.Data;
+using BancoSENAIAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BancoSENAIAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class DocumentoController : Controller
+    public class DocumentoController : ControllerBase
     {
+        private readonly AppDbContext _context;
         private readonly string _caminhoRaiz = Path.Combine(Directory.GetCurrentDirectory(), "ClienteArquivos");
-
-        private static List<Models.DocumentoMetadado> _documentosMetadados = new List<Models.DocumentoMetadado>();
-
-        private static int _next = 1;
-
-        private const long TamanhoMaximoBytes = 2 * 1024 * 1024;
-
-        private readonly string[] _extensoesPermitidas = { ".pdf", ".jpg", ".png" };
+        public DocumentoController(AppDbContext context)
+        {
+            _context = context;
+        }
 
         [HttpPost("upload/{codigoCliente}")]
         public async Task<IActionResult> AnexarArquivo(int codigoCliente, IFormFile arquivo)
         {
             if (arquivo == null || arquivo.Length == 0)
             {
-                return BadRequest("Nenhum arquivo foi criado.");
+                return BadRequest("Nenhum arquivo foi enviado");
             }
-
-            if (arquivo.Length > TamanhoMaximoBytes)
+            if (arquivo.Length > 2 * 1024 * 1024)
             {
-                return BadRequest("O arquivo excede o tamanho máximo permitido de 2 MB.");
+                return BadRequest("O arquivo não pode ter mais de 2 MB.");
             }
-
-            string extensao12 = Path.GetExtension(arquivo.FileName).ToLower();
-
-            if (!_extensoesPermitidas.Contains(extensao12))
-            {
-                return BadRequest("Extensão de arquivo não permitida. Apenas arquivos .pdf, .jpg e .png são aceitos.");
-            }
-
-
             string pastaCliente = Path.Combine(_caminhoRaiz, codigoCliente.ToString());
 
             if (!Directory.Exists(pastaCliente))
@@ -44,78 +34,81 @@ namespace BancoSENAIAPI.Controllers
                 Directory.CreateDirectory(pastaCliente);
             }
             string extensao = Path.GetExtension(arquivo.FileName);
+            string[] extensoesPermitidas = { ".pdf", ".jpg", ".png" };
 
+            if (!extensoesPermitidas.Contains(extensao.ToLower()))
+            {
+                return BadRequest("Extensão de arquivo não permitida. Apenas .pdf, .jpg e .png são aceitos.");
+            }
             string nomeOriginal = Path.GetFileNameWithoutExtension(arquivo.FileName);
-
-            string novoNome = $"{codigoCliente}_{nomeOriginal}_{Guid.NewGuid()}{extensao}";
-
+            string novoNome = $"{codigoCliente}{nomeOriginal}{Guid.NewGuid()}{extensao}";
             string caminhoFinal = Path.Combine(pastaCliente, novoNome);
 
             using (var stream = new FileStream(caminhoFinal, FileMode.Create))
             {
                 await arquivo.CopyToAsync(stream);
             }
-            var documentoMetadados = new Models.DocumentoMetadado
+            var documentoMetadados = new Models.DocumentoMetadados
             {
-                ID = _next++,
-                Name = nomeOriginal,
-                Extensão = extensao,
-                Caminho = caminhoFinal,
-                CodigoCliente = codigoCliente
-            };
-            _documentosMetadados.Add(documentoMetadados);
 
+                Nome = nomeOriginal,
+                Extensao = extensao,
+                Caminho = caminhoFinal,
+                CodigoCliente = codigoCliente,
+            };
+            _context.DocumentoMetadados.Add(documentoMetadados);
+            await _context.SaveChangesAsync();
             return Ok(new { mensagem = "Documento anexado com sucesso", arquivoSalvo = novoNome });
+
         }
         [HttpGet("listar/{codigoCliente}")]
-        public IActionResult ListarDocumentos(int codigoCliente)
+        public async Task<IActionResult> listarDocumentos(int codigoCliente)
         {
-            var documentos = _documentosMetadados
-                .Where(d => d.CodigoCliente == codigoCliente)
-                .ToList();
+            var documentos = await _context.DocumentoMetadados
+            .Where(d => d.CodigoCliente == codigoCliente)
+            .ToListAsync();
 
             if (!documentos.Any())
             {
-                return NotFound("Nenhum documento encontrado para este cliente.");
+                return NotFound("Nenhum Documento foi encontrado para este cliente");
             }
-
             return Ok(documentos);
         }
         [HttpGet("download/{id}")]
-        public IActionResult DowloadDocumento(int id)
+        public async Task<IActionResult> DownloadDocumentos(int id)
         {
-            var documento = _documentosMetadados.FirstOrDefault(d => d.ID == id);
-            if (documento == null)
-            {
-                return NotFound("Documento não encontrado.");
-            }
-            if (!System.IO.File.Exists(documento.Caminho))
-            {
-                return NotFound("O arquivo físico não foi encontrado no servidor");
-            }
-            byte[] bytesArquivo = System.IO.File.ReadAllBytes(documento.Caminho);
-            string nomeArquivoDownload = $"{documento.Name}{documento.Extensão}";
+            var documentos = await _context.DocumentoMetadados.FirstOrDefaultAsync(d => d.Id == id);
 
-            return File(bytesArquivo, "application/octet-stream", nomeArquivoDownload);
+            if (documentos == null)
+            {
+                return NotFound("Documento não encontrado");
+            }
+            if (!System.IO.File.Exists(documentos.Caminho))
+            {
+                return NotFound("Arquivo não encontrado no servidor.");
+            }
+
+            byte[] arquivo = await System.IO.File.ReadAllBytesAsync(documentos.Caminho);
+            return File(arquivo, "application/octet-stream", documentos.Nome + documentos.Extensao);
+
         }
         [HttpDelete("excluir/{id}")]
-        public IActionResult ExcluirDocumento(int id)
+        public async Task<IActionResult> ExcluirDocumentos(int id)
         {
-            var documento = _documentosMetadados.FirstOrDefault(d => d.ID == id);
+            var documento = await _context.DocumentoMetadados.FirstOrDefaultAsync(d => d.Id == id);
 
             if (documento == null)
             {
-                return NotFound("Documento não encontrado.");
+                return NotFound("Arquivo não encontrado");
             }
-
             if (System.IO.File.Exists(documento.Caminho))
-            {
                 System.IO.File.Delete(documento.Caminho);
-            }
+            _context.DocumentoMetadados.Remove(documento);
 
-            _documentosMetadados.Remove(documento);
+            await _context.SaveChangesAsync();
 
-            return Ok(new { mensagem = "Documento e arquivo físico excluídos com sucesso." });
+            return Ok("Documento Excluído com sucesso.");
         }
+
     }
 }
