@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-usingusing System.ComponentModel.DataAnnotations;
-
 namespace BancoSENAIAPI.Models
 {
     public class Cliente

@@ -2,11 +2,13 @@
 using BancoSENAIAPI.Data;
 using BancoSENAIAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BancoSENAIAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [Authorize]
     public class DocumentoController : ControllerBase
     {
         private readonly AppDbContext _context;
